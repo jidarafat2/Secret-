@@ -11,6 +11,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -25,16 +31,20 @@ jobs:
       - name: Build Web
         run: npx vite build
 
-      - name: Init Capacitor (fix)
-        run: |
-          npx cap init secretchat com.example.secretchat --web-dir=dist || true
+      - name: Sync Capacitor
+        run: npx cap sync android || npx cap add android
 
-      - name: Add Android
+      - name: Build APK
         run: |
-          npx cap add android || true
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
-      - name: Sync
-        run: npx cap sync android
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: android/app/build/outputs/apk/debug/app-debug.apk        run: npx cap sync android
 
       - name: Build APK
         run: |
